@@ -1,0 +1,17 @@
+{
+  "paths": {
+    "catalog": "data/curated/drinks_catalog.json",
+    "vectors": "data/features/drink_vectors.json",
+    "id_map": "data/features/id_map.json",
+    "search_index": "data/features/search_index.json",
+    "ratings": "storage/ratings.jsonl",
+    "profile": "storage/profiles.json",
+    "als_active": "models/als/active.json"
+  },
+  "recs": {
+    "weights": { "content": 0.4, "taste": 0.6, "als": 0.0 },
+    "diversity_penalty": 0.12, 
+    "similar_k": 20,
+    "recs_k": 48
+  }
+}

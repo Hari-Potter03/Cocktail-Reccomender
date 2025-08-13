@@ -1,10 +1,12 @@
 from pathlib import Path
 import json, numpy as np
+from datetime import datetime, timezone
 
 class Registry:
     def __init__(self, config_path="config/app.json"):
         self.cfg = json.loads(Path(config_path).read_text())
         p = self.cfg["paths"]
+        recs_cfg = self.cfg.get("recs", {})
 
         # curated catalog
         self.catalog_list = json.loads(Path(p["catalog"]).read_text())
@@ -17,6 +19,7 @@ class Registry:
         self.index_by_id = {did: i for i, did in enumerate(self.ids)}
         self.dim = self.id_map["dim"]
         self.blocks = self.id_map["block_sizes"]
+
         # block offsets in concatenation order
         self.offsets = {}
         off = 0
@@ -28,8 +31,21 @@ class Registry:
         self.search_index = json.loads(Path(p["search_index"]).read_text())
 
         # storage paths
-        self.ratings_path = Path(p["ratings"])
-        self.ratings_path.parent.mkdir(parents=True, exist_ok=True)
+        self.ratings_path = Path(p["ratings"]); self.ratings_path.parent.mkdir(parents=True, exist_ok=True)
+        self.profile_path = Path(p["profile"]); self.profile_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # blend weights + diversity
+        w = recs_cfg.get("weights", {})
+        self.weight_content = float(w.get("content", 0.4))
+        self.weight_taste   = float(w.get("taste",   0.6))
+        self.weight_als     = float(w.get("als",     0.0))
+        self.diversity_penalty = float(recs_cfg.get("diversity_penalty", 0.12))
+
+        # optional ALS pointer path
+        self.als_active_path = Path(p.get("als_active", "models/als/active.json"))
+
+    def now_iso(self):  # small helper
+        return datetime.now(timezone.utc).isoformat()
 
     def get(self, drink_id: str):
         return self.catalog.get(drink_id)

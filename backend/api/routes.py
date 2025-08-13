@@ -1,16 +1,17 @@
 from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from ..loaders.registry import Registry
-from ..services import search_service, recommender_service, ratings_service
+from ..services import search_service, recommender_service, ratings_service, profile_service as prof
 
 router = APIRouter()
-REG = Registry()  # load once
+REG = Registry()
 
 class RecsBody(BaseModel):
-    likes: dict | None = None   # {"spirit":["tequila"], "tags":["citrusy"], "season":["summer"]}
+    likes: dict | None = None
     dislikes: dict | None = None
     seed_ids: list[str] | None = None
     k: int | None = 48
+    user_id: str | None = "local"
 
 class RatingBody(BaseModel):
     user_id: str | None = "local"
@@ -47,10 +48,20 @@ def similar(drink_id: str, k: int=20):
 
 @router.post("/recs")
 def recs(body: RecsBody):
-    ids = recommender_service.recommend(REG, body.likes, body.dislikes, body.seed_ids, body.k or 48)
-    return {"items": [REG.get(i) for i in ids]}
+    items = recommender_service.recommend(
+        REG, body.likes, body.dislikes, body.seed_ids, body.k or 48, user_id=body.user_id or "local"
+    )
+    return {"items": items}
 
 @router.post("/ratings")
 def rate(body: RatingBody):
     evt = ratings_service.append_rating(REG, body.user_id, body.drink_id, body.rating, body.tried, body.ts)
-    return {"ok": True, "event": evt}
+    # Recompute taste vector immediately for instant personalization
+    summary = prof.rebuild_and_save_profile(REG, user_id=body.user_id or "local")
+    return {"ok": True, "event": evt, "profile": summary}
+
+@router.get("/profile")
+def profile(user_id: str = "local"):
+    # ensure profile exists / is fresh
+    summary = prof.rebuild_and_save_profile(REG, user_id=user_id)
+    return summary

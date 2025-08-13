@@ -137,3 +137,65 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# --- Python build & caches ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.so
+.eggs/
+*.egg-info/
+dist/
+build/
+pip-wheel-metadata/
+
+# Virtualenvs
+.venv/
+venv/
+env/
+ENV/
+.python-version  # if you don't want to pin pyenv per-dev
+
+# Test & tooling artifacts
+.pytest_cache/
+.tox/
+.coverage
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.pytype/
+.cache/  # generic tool cache
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Editors & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.iml
+
+# --- Project-specific (recommended) ---
+# Local user data (ratings/profiles)
+storage/*
+!storage/.gitkeep
+
+# Large model binaries (keep JSON maps/metadata under version control)
+models/als/*/*.npy
+models/als/*/*.npz
+models/als/*/*.pt
+models/als/*/*.bin
+
+# Optional: ignore raw snapshots if they get large
+# data/raw/*
+# !data/raw/README.md
+
+# Optional: if you always rebuild features locally
+# data/features/*
+# !data/features/README.md
+
+# Local environment/config overrides
+config/*.local.json
+.env.local

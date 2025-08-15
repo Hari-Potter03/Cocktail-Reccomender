@@ -65,3 +65,9 @@ def profile(user_id: str = "local"):
     # ensure profile exists / is fresh
     summary = prof.rebuild_and_save_profile(REG, user_id=user_id)
     return summary
+
+@router.get("/facets")
+def get_facets():
+    from ..services.search_service import facets
+    return facets(REG)
+

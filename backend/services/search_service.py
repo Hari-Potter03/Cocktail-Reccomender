@@ -24,3 +24,13 @@ def search(reg, q: str, spirit: str|None=None, tag: str|None=None, season: str|N
     # stable order by name
     items = sorted((reg.catalog[i] for i in candidates), key=lambda r: (r.get("name") or "").lower())
     return items
+
+def facets(reg):
+    si = reg.search_index
+    def counts(d): return {k: len(v) for k, v in d.items()}
+    return {
+        "spirits": counts(si["by_spirit"]),
+        "tags": counts(si["by_tag"]),
+        "seasons": counts(si["by_season"]),
+        "total": len(reg.ids),
+    }

@@ -1,0 +1,10 @@
+fastapi>=0.110
+uvicorn[standard]>=0.27
+numpy>=1.26
+scipy>=1.11
+requests>=2.31
+
+# Optional (only if you train a true ALS later):
+# implicit>=0.7.2
+# scikit-learn>=1.4
+# pandas>=2.0

@@ -1,0 +1,54 @@
+# ---- Config ----
+PY := python
+UVICORN := uvicorn
+BACKEND_APP := backend.main:app
+
+# ---- Convenience targets ----
+.PHONY: help setup venv install data run-pipeline run-backend run-frontend clean reset
+
+help:
+	@echo "make setup         -> create .venv and install Python deps"
+	@echo "make run-pipeline  -> build features (from curated data)"
+	@echo "make data          -> fetch -> curate -> build features"
+	@echo "make run-backend   -> start FastAPI (http://127.0.0.1:8000)"
+	@echo "make run-frontend  -> start Vite (http://localhost:5173)"
+	@echo "make reset         -> clear local ratings/profiles"
+	@echo "make clean         -> remove caches/builds"
+
+# 1) Python env + deps
+setup: venv install
+
+venv:
+	@$(PY) -m venv .venv
+	@echo "Activate with: source .venv/bin/activate  (Windows: .venv\\Scripts\\activate)"
+
+install:
+	. .venv/bin/activate && pip install -U pip && pip install -r requirements.txt
+
+# 2) Data pipeline
+# Full refresh: hit API, curate, then build feature vectors
+data:
+	. .venv/bin/activate && $(PY) scripts/collect_cocktails.py
+	. .venv/bin/activate && $(PY) scripts/curate_catalog.py
+	. .venv/bin/activate && $(PY) scripts/build_features.py
+
+# Light pipeline: (re)build features from existing curated JSON
+run-pipeline:
+	. .venv/bin/activate && $(PY) scripts/build_features.py
+
+# 3) Run servers (in separate terminals)
+run-backend:
+	. .venv/bin/activate && $(UVICORN) $(BACKEND_APP) --reload
+
+run-frontend:
+	cd frontend && npm install && npm run dev
+
+# Utilities
+reset:
+	@rm -f storage/ratings.jsonl storage/profiles.json || true
+	@echo "Cleared storage/ (ratings & profiles)"
+
+clean:
+	@find . -name "__pycache__" -type d -exec rm -rf {} + || true
+	@find . -name "*.py[cod]" -delete || true
+	@rm -rf .pytest_cache .mypy_cache htmlcov dist build || true
